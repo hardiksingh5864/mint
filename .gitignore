@@ -124,3 +124,6 @@ node_modules
 # solidity-coverage files
 /coverage
 /coverage.json
+
+#private folder for my metamask each user even client should have there own 
+.secret
