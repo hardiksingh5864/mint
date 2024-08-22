@@ -1,25 +1,35 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useCallback, useContext } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useTheme } from 'next-themes';
 import { Button, Input } from '@/components';
 import Image from 'next/image';
 import images from '../assets';
+import { NFTContext } from '../context/NFTContext';
 
 const CreateNFTs = () => {
   const [fileUrl, setFileUrl] = useState(null);
   const [formInput, setFormInput] = useState({ price: '', name: '', description: '' });
   const { theme } = useTheme();
+  const { uploadToNFTStorage } = useContext(NFTContext); // Use the NFT.Storage function
 
-  const onDrop = useCallback((acceptedFiles) => {
-    const file = acceptedFiles[0];
-    if (file) {
+  const onDrop = useCallback(async (acceptedFiles) => {
+    if (acceptedFiles.length) {
+      const file = acceptedFiles[0];
       const reader = new FileReader();
-      reader.onload = () => {
-        setFileUrl(reader.result);
-      };
+
+      reader.onload = () => setFileUrl(reader.result);
       reader.readAsDataURL(file);
+
+      // Upload the file to NFT.Storage and get the URL
+      try {
+        const url = await uploadToNFTStorage(file);
+        console.log('Uploaded URL:', url);
+        setFileUrl(url);
+      } catch (error) {
+        console.error('Error uploading file:', error);
+      }
     }
-  }, []);
+  }, [uploadToNFTStorage]);
 
   const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject } = useDropzone({
     onDrop,
@@ -27,12 +37,13 @@ const CreateNFTs = () => {
     maxSize: 5000000,
   });
 
-  const fileStyle = useMemo(() => (
+  // Make sure useMemo returns a valid string for CSS class names
+  const fileStyle = React.useMemo(() => (
     `dark:bg-nft-black-1 bg-white border dark:border-white border-nft-gray-2 flex-col items-center p-4 rounded-md border-dashed 
     ${isDragActive ? 'border-file-active' : ''}
     ${isDragAccept ? 'border-file-accept' : ''}
     ${isDragReject ? 'border-file-reject' : ''}`
-  ), [isDragAccept, isDragActive, isDragReject]);
+  ), [isDragActive, isDragAccept, isDragReject]);
 
   return (
     <div className='flex justify-center sm:px-4 p-12'>
@@ -47,7 +58,7 @@ const CreateNFTs = () => {
                 Drag and drop some files here, or click to select files (JPG, PNG, GIF)
               </p>
               <div className='my-6 w-full flex justify-center'>
-                <Image 
+                <Image
                   src={images.upload}
                   width={80}
                   height={80}
@@ -89,10 +100,10 @@ const CreateNFTs = () => {
           handleClick={(e) => setFormInput({ ...formInput, price: e.target.value })}
         />
         <div className='mt-7 w-full flex justify-end'>
-          <Button 
+          <Button
             btnName="Create NFT"
             className="rounded-xl"
-            handleClick={() => {}}
+            handleClick={() => { }}
           />
         </div>
       </div>

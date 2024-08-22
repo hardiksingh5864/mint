@@ -3,21 +3,24 @@ import '../styles/globals.css';
 import Script from 'next/script';
 import { ThemeProvider } from 'next-themes';
 import { Navbar, Footer } from '../components';
+import { NFTProvider } from '@/context/NFTContext'; // Correct import
 
 const MyApp = ({ Component, pageProps }) => {
   return (
-    <ThemeProvider attribute="class">
-      <div className="dark:bg-nft-dark bg-white min-h-screen">
-        <Navbar />
-        <div className="pt-20 pb-20 px-10 flex flex-col min-h-screen">
-          <main className="flex-1">
-            <Component {...pageProps} />
-          </main>
-          <Footer />
+    <NFTProvider>
+      <ThemeProvider attribute="class">
+        <div className="dark:bg-nft-dark bg-white min-h-screen">
+          <Navbar />
+          <div className="pt-20 pb-20 px-10 flex flex-col min-h-screen">
+            <main className="flex-1">
+              <Component {...pageProps} />
+            </main>
+            <Footer />
+          </div>
         </div>
-      </div>
-      <Script src="https://kit.fontawesome.com/53eca24187.js" crossOrigin="anonymous"></Script>
-    </ThemeProvider>
+        <Script src="https://kit.fontawesome.com/53eca24187.js" crossOrigin="anonymous"></Script>
+      </ThemeProvider>
+    </NFTProvider>
   );
 };
 
