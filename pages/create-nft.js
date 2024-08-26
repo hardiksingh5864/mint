@@ -5,12 +5,14 @@ import { Button, Input } from '@/components';
 import Image from 'next/image';
 import images from '../assets';
 import { NFTContext } from '../context/NFTContext';
+import { useRouter } from 'next/router';
 
 const CreateNFTs = () => {
   const [fileUrl, setFileUrl] = useState(null);
   const [formInput, setFormInput] = useState({ price: '', name: '', description: '' });
   const { theme } = useTheme();
-  const { uploadToNFTStorage } = useContext(NFTContext); // Use the NFT.Storage function
+  const { uploadToPinata, createNFT } = useContext(NFTContext); 
+  const router = useRouter();
 
   const onDrop = useCallback(async (acceptedFiles) => {
     if (acceptedFiles.length) {
@@ -20,16 +22,16 @@ const CreateNFTs = () => {
       reader.onload = () => setFileUrl(reader.result);
       reader.readAsDataURL(file);
 
-      // Upload the file to NFT.Storage and get the URL
+      // Upload the file to Pinata and get the URL
       try {
-        const url = await uploadToNFTStorage(file);
+        const url = await uploadToPinata(file);
         console.log('Uploaded URL:', url);
         setFileUrl(url);
       } catch (error) {
         console.error('Error uploading file:', error);
       }
     }
-  }, [uploadToNFTStorage]);
+  }, [uploadToPinata]);
 
   const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject } = useDropzone({
     onDrop,
@@ -37,7 +39,6 @@ const CreateNFTs = () => {
     maxSize: 5000000,
   });
 
-  // Make sure useMemo returns a valid string for CSS class names
   const fileStyle = React.useMemo(() => (
     `dark:bg-nft-black-1 bg-white border dark:border-white border-nft-gray-2 flex-col items-center p-4 rounded-md border-dashed 
     ${isDragActive ? 'border-file-active' : ''}
@@ -100,11 +101,14 @@ const CreateNFTs = () => {
           handleClick={(e) => setFormInput({ ...formInput, price: e.target.value })}
         />
         <div className='mt-7 w-full flex justify-end'>
-          <Button
-            btnName="Create NFT"
-            className="rounded-xl"
-            handleClick={() => { }}
-          />
+        <Button
+              btnName="Create NFT"
+              className="rounded-xl"
+              handleClick={() => {
+              console.log('Create NFT button clicked!');
+              createNFT(formInput, fileUrl, router);
+              }}
+            />
         </div>
       </div>
     </div>
