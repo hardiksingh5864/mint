@@ -1,16 +1,29 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import Image from "next/image";
 import { Banner, CreatorCard, NFTCard } from "@/components";
+import { NFTContext } from "@/context/NFTContext";
 import images from "../assets";
 import { makeId } from "@/utils/makeid";
 import { useTheme } from "next-themes";
+import { useStyleRegistry } from "styled-jsx";
 
 const Home = ({ isMenuOpen }) => {
+  const { fetchNFTs } = useContext(NFTContext);
   const scrollRef = useRef(null);
   const containerRef = useRef(null);
+  const [nfts,   setNfts]  = useState([])
   const { theme } = useTheme();
   const [isClient, setIsClient] = useState(false);
   const [isScrollHidden, setIsScrollHidden] = useState(false);
+
+  useEffect(()=>
+  {
+    fetchNFTs()
+      .then((items) => {
+        setNfts(items);
+        console.log(itemn)
+      });
+  },[])
 
   const handleScroll = (direction) => {
     const { current } = scrollRef;
