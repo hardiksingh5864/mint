@@ -32,7 +32,7 @@ const CreateNFTs = () => {
       }
     }
   }, [uploadToPinata]);
-
+  console.log(formInput)
   const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject } = useDropzone({
     onDrop,
     accept: 'image/*',
@@ -106,6 +106,7 @@ const CreateNFTs = () => {
               className="rounded-xl"
               handleClick={() => {
               console.log('Create NFT button clicked!');
+              console.log(formInput)
               createNFT(formInput, fileUrl, router);
               }}
             />

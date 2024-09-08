@@ -5,25 +5,24 @@ import { NFTContext } from "@/context/NFTContext";
 import images from "../assets";
 import { makeId } from "@/utils/makeid";
 import { useTheme } from "next-themes";
-import { useStyleRegistry } from "styled-jsx";
 
 const Home = ({ isMenuOpen }) => {
   const { fetchNFTs } = useContext(NFTContext);
   const scrollRef = useRef(null);
   const containerRef = useRef(null);
-  const [nfts,   setNfts]  = useState([])
+  const [nfts, setNfts] = useState([]);  // Initialize as an empty array
   const { theme } = useTheme();
   const [isClient, setIsClient] = useState(false);
   const [isScrollHidden, setIsScrollHidden] = useState(false);
 
-  useEffect(()=>
-  {
+  useEffect(() => {
     fetchNFTs()
       .then((items) => {
-        setNfts(items);
-        console.log(itemn)
-      });
-  },[])
+        setNfts(items || []);  // Ensure that items is an array
+        console.log(items);
+      })
+      .catch((error) => console.error("Error fetching NFTs:", error));  // Add error handling
+  }, []);
 
   const handleScroll = (direction) => {
     const { current } = scrollRef;
@@ -134,19 +133,11 @@ const Home = ({ isMenuOpen }) => {
             </div>
           </div>
           <div className="mt-3 w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8  dark:text-white text-nft-black-1 ">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
-              <NFTCard
-                key={`nft-${i}`}
-                nft={{
-                  i,
-                  name: `Nifty NFT${i}`,
-                  price:(10-i*0.534.toFixed(2)),
-                  seller: `0x${makeId(3)}...${makeId(4)}`,
-                  owner: `0x${makeId(3)}...${makeId(4)}`,
-                  description: 'Cool NFT on Sale',
-                }}
-              />
-            ))}
+            {nfts.length > 0 ? (
+              nfts.map((nft) => <NFTCard key={nft.tokenId} nft={nft} />)
+            ) : (
+              <p>No NFTs available.</p>
+            )}
           </div>
         </div>
       </div>

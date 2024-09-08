@@ -3,6 +3,13 @@ import Web3Modal from 'web3modal';
 import { ethers } from 'ethers';
 import axios from 'axios';
 import { MarketAdress, MarketAdressABI } from './constants';
+import { Network, Alchemy } from 'alchemy-sdk';
+
+const settings = {
+  apiKey: "80Jhn5InLlJZhGwwLDq1eV-XXJHM06T0", // Replace with your Alchemy API Key.
+  network: Network.ETH_MAINNET, // Replace with your network.
+};
+const alchemy = new Alchemy(settings);
 
 const PINATA_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIzZjczN2U2MC1iMWNlLTRiYjAtYWNhMS04ZjNkNDRhMmE2NjYiLCJlbWFpbCI6ImtyYXRvc2dvZG9md2FyYmxhZGU5OUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJpZCI6IkZSQTEiLCJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MX0seyJpZCI6Ik5ZQzEiLCJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MX1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiMjRjNjMyOTIxNGM0MDMxYTk5MDkiLCJzY29wZWRLZXlTZWNyZXQiOiIzYzU3NWRlNWViNTcwMTAwMDQzZDMxZDlkODhiMjc5Mzk3MDhlZTkyZWMwMWVkYjMyOTM5ZmYwNzFhNTcxZmVlIiwiaWF0IjoxNzI0MzE2NTY3fQ.ig16iWuNashygLC4byPMQr_pbVNhuyJs2mFJuyd-aX8';
 
@@ -48,7 +55,7 @@ export const NFTProvider = ({ children }) => {
 
   // Upload file to Pinata
   const uploadToPinata = async (file) => {
-    const url = `https://api.pinata.cloud/pinning/pinFileToIPFS`;
+    const url = 'https://api.pinata.cloud/pinning/pinFileToIPFS';
 
     let data = new FormData();
     data.append('file', file);
@@ -66,61 +73,52 @@ export const NFTProvider = ({ children }) => {
     });
     data.append('pinataOptions', pinataOptions);
 
-    try {
-      const response = await axios.post(url, data, {
-        maxBodyLength: 'Infinity',
-        headers: {
-          'Content-Type': `multipart/form-data; boundary=${data._boundary}`,
-          Authorization: `Bearer ${PINATA_JWT}`,
-        },
-      });
+    const response = await axios.post(url, data, {
+      maxBodyLength: 'Infinity',
+      headers: {
+        'Content-Type': `multipart/form-data; boundary=${data._boundary}`,
+        'Authorization': `Bearer ${PINATA_JWT}`,
+      },
+    });
 
-      console.log('Pinata response:', response.data);
-      const ipfsUrl = `https://gateway.pinata.cloud/ipfs/${response.data.IpfsHash}`;
-      return ipfsUrl;
-    } catch (error) {
-      console.error('Error uploading file to Pinata:', error);
-      throw new Error('Failed to upload file to Pinata');
-    }
+    console.log('Pinata response:', response.data);
+    const ipfsUrl = `https://gateway.pinata.cloud/ipfs/${response.data.IpfsHash}`;
+    return ipfsUrl;
   };
 
   // Create sale function
   const createSale = async (url, formInputPrice, isReselling, id) => {
-    try {
-      console.log('createSale function triggered');
+    console.log('createSale function triggered');
 
-      const web3Modal = new Web3Modal();
-      const connection = await web3Modal.connect();
-      const provider = new ethers.providers.Web3Provider(connection);
-      const signer = provider.getSigner();
+    const web3Modal = new Web3Modal();
+    const connection = await web3Modal.connect();
+    const provider = new ethers.providers.Web3Provider(connection);
+    const signer = provider.getSigner();
 
-      const priceInWei = ethers.utils.parseUnits(formInputPrice, 'ether');
-      console.log('Price in Wei:', priceInWei.toString());
+    const priceInWei = ethers.utils.parseUnits(formInputPrice, 'ether');
+    console.log('Price in Wei:', priceInWei.toString());
 
-      const contract = fetchContract(signer);
-      const listingPrice = await contract.getListingPrice();
-      console.log('Listing Price:', listingPrice.toString());
+    const contract = fetchContract(signer);
+    const listingPrice = await contract.getListingPrice();
+    console.log('Listing Price:', listingPrice.toString());
 
-      // Estimate gas fees
-      const gasEstimate = await contract.estimateGas.createToken(url, priceInWei, { value: listingPrice.toString() });
-      const gasPrice = await provider.getGasPrice();
-      const estimatedGasFee = gasEstimate.mul(gasPrice);
-      console.log('Estimated Gas Fee:', ethers.utils.formatEther(estimatedGasFee.toString()), 'ETH');
+    // Estimate gas fees
+    const gasEstimate = await contract.estimateGas.createToken(url, priceInWei, { value: listingPrice.toString() });
+    const gasPrice = await provider.getGasPrice();
+    const estimatedGasFee = gasEstimate.mul(gasPrice);
+    console.log('Estimated Gas Fee:', ethers.utils.formatEther(estimatedGasFee.toString()), 'ETH');
 
-      // Inform the user about gas and marketplace fees
-      alert(`Estimated Gas Fee: ${ethers.utils.formatEther(estimatedGasFee.toString())} ETH\nMarketplace Listing Fee: ${ethers.utils.formatEther(listingPrice.toString())} ETH`);
+    // Inform the user about gas and marketplace fees
+    alert(`Estimated Gas Fee: ${ethers.utils.formatEther(estimatedGasFee.toString())} ETH\nMarketplace Listing Fee: ${ethers.utils.formatEther(listingPrice.toString())} ETH`);
 
-      // Proceed with the transaction
-      const transaction = !isReselling
-        ? await contract.createToken(url, priceInWei, { value: listingPrice.toString() })
-        : await contract.resellToken(id, priceInWei, { value: listingPrice.toString() });
+    // Proceed with the transaction
+    const transaction = !isReselling
+      ? await contract.createToken(url, priceInWei, { value: listingPrice.toString() })
+      : await contract.resellToken(id, priceInWei, { value: listingPrice.toString() });
 
-      console.log('Creating sale on blockchain...');
-      await transaction.wait();
-      console.log('Sale created on blockchain!');
-    } catch (error) {
-      console.error('Error creating sale:', error);
-    }
+    console.log('Creating sale on blockchain...');
+    await transaction.wait();
+    console.log('Sale created on blockchain!');
   };
 
   // Create NFT function
@@ -128,39 +126,49 @@ export const NFTProvider = ({ children }) => {
     console.log('createNFT function triggered');
     const { name, description, price } = formInput;
 
-    if (!name || !description || !price || !fileUrl) {
+    console.log('Name:', name);
+    console.log('Description:', description);
+    console.log('Price:', price);
+    console.log('File URL:', fileUrl);
+
+    if (!name, !description, !price, !fileUrl) {
       console.log('Missing form input');
       return;
     }
 
     const data = JSON.stringify({ name, description, image: fileUrl });
 
-    try {
-      console.log('Uploading file to Pinata...');
-      const ipfsUrl = await uploadToPinata(new Blob([data], { type: 'application/json' }));
-      console.log('File uploaded to Pinata! URL:', ipfsUrl);
+    console.log('Uploading file to Pinata...');
+    const ipfsUrl = await uploadToPinata(new Blob([data], { type: 'application/json' }));
+    console.log('File uploaded to Pinata! URL:', ipfsUrl);
 
-      await createSale(ipfsUrl, price, false, null);
-      console.log('Sale created on blockchain!');
+    await createSale(ipfsUrl, price, false, null);
+    console.log('Sale created on blockchain!');
 
-      router.push('/');
-    } catch (error) {
-      console.error('Error uploading file to Pinata or creating sale:', error);
-    }
+    router.push('/');
   };
 
   // Fetch NFTs function using Alchemy
   const fetchNFTs = async () => {
-    try {
-      const contract = fetchContract(provider); // Using the Alchemy provider here
-      const data = await contract.fetchMarketItems();
+    console.log('Fetching NFTs...');
+    const contract = fetchContract(provider); // Using the Alchemy provider here
+    console.log('Contract instance:', contract);
 
+    // Ensure the contract method exists and call fetchMarketItems()
+    try {
+      const data = await contract.fetchMarketItems();
+      console.log('Raw data from contract:', data);
+
+      // Process data if fetched successfully
       const items = await Promise.all(
         data.map(async ({ tokenId, seller, owner, price: unformattedPrice }) => {
           const tokenURI = await contract.tokenURI(tokenId);
-          const { data: { image, name, description } } = await axios.get(tokenURI);
-          const price = ethers.utils.formatUnits(unformattedPrice.toString(), 'ether');
+          console.log(`Token URI for tokenId ${tokenId}:`, tokenURI);
 
+          const { data: { image, name, description } } = await axios.get(tokenURI);
+          console.log(`Fetched metadata for tokenId ${tokenId}:`, { image, name, description });
+
+          const price = ethers.utils.formatUnits(unformattedPrice.toString(), 'ether');
           return {
             price,
             tokenId: tokenId.toNumber(),
@@ -174,15 +182,28 @@ export const NFTProvider = ({ children }) => {
         })
       );
 
+      console.log('Final parsed items:', items);
       return items;
     } catch (error) {
       console.error('Error fetching NFTs:', error);
-      throw new Error('Failed to fetch NFTs');
+      if (error.code === "CALL_EXCEPTION") {
+        console.error('Contract call failed, check ABI, contract address, and network.');
+      }
     }
   };
 
   return (
-    <NFTContext.Provider value={{ nftCurrency, connectWallet, currentAccount, uploadToPinata, createNFT, createSale, fetchNFTs }}>
+    <NFTContext.Provider
+      value={{
+        nftCurrency,
+        currentAccount,
+        connectWallet,
+        uploadToPinata,
+        createSale,
+        createNFT,
+        fetchNFTs,
+      }}
+    >
       {children}
     </NFTContext.Provider>
   );

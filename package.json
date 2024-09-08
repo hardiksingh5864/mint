@@ -13,6 +13,7 @@
     "@nomiclabs/hardhat-waffle": "^2.0.3",
     "@openzeppelin/contracts": "^4.9.3",
     "@web3-storage/w3up-client": "^16.0.0",
+    "alchemy-sdk": "^3.4.1",
     "axios": "^1.4.0",
     "carbites": "^2.0.0",
     "files-from-path": "^1.0.4",
