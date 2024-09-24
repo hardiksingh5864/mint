@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useContext } from 'react';
+import React, { useState, useCallback, useContext, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { useTheme } from 'next-themes';
 import { Button, Input } from '@/components';
@@ -32,7 +32,7 @@ const CreateNFTs = () => {
       }
     }
   }, [uploadToPinata]);
-  console.log(formInput)
+
   const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject } = useDropzone({
     onDrop,
     accept: 'image/*',
@@ -101,15 +101,15 @@ const CreateNFTs = () => {
           handleClick={(e) => setFormInput({ ...formInput, price: e.target.value })}
         />
         <div className='mt-7 w-full flex justify-end'>
-        <Button
-              btnName="Create NFT"
-              className="rounded-xl"
-              handleClick={() => {
+          <Button
+            btnName="Create NFT"
+            className="rounded-xl"
+            handleClick={() => {
               console.log('Create NFT button clicked!');
-              console.log(formInput)
+              console.log(formInput);
               createNFT(formInput, fileUrl, router);
-              }}
-            />
+            }}
+          />
         </div>
       </div>
     </div>

@@ -7,28 +7,39 @@ import { makeId } from "@/utils/makeid";
 import { useTheme } from "next-themes";
 
 const Home = ({ isMenuOpen }) => {
-  const { fetchNFTs } = useContext(NFTContext);
+  const { fetchNFTs, createdNFTs } = useContext(NFTContext); // Added createdNFTs to context
   const scrollRef = useRef(null);
   const containerRef = useRef(null);
-  const [nfts, setNfts] = useState([]);  // Initialize as an empty array
+  const [nfts, setNfts] = useState([]);
   const { theme } = useTheme();
   const [isClient, setIsClient] = useState(false);
   const [isScrollHidden, setIsScrollHidden] = useState(false);
 
+  // Prices starting from 9.47, decreasing as specified
+  const prices = [9.47, 8.93, 8.4, 7.86, 7.33, 6.79, 6.26, 5.72, 5.19, 4.65];
+
+  // Simplified dynamic creation of prebuilt Hot Bids using map
+  const prebuiltHotBids = Array.from({ length: 10 }, (_, i) => ({
+    tokenId: (i + 1).toString(),
+    name: `Exclusive NFT ${i + 1}`,
+    price: prices[i].toFixed(2),  // Price with fixed 2 decimal places
+    seller: `0x${makeId(3)}...${makeId(4)}`,
+    image: images[`nft${i + 1}`],  // Access the image dynamically
+  }));
+
   useEffect(() => {
     fetchNFTs()
       .then((items) => {
-        setNfts(items || []);  // Ensure that items is an array
-        console.log(items);
+        setNfts(items || []);
       })
-      .catch((error) => console.error("Error fetching NFTs:", error));  // Add error handling
+      .catch((error) => console.error("Error fetching NFTs:", error));
   }, []);
 
   const handleScroll = (direction) => {
     const { current } = scrollRef;
 
     if (current) {
-      const scrollAmount = 100; // Amount to scroll
+      const scrollAmount = 100;
       if (direction === "left") {
         current.scrollLeft -= scrollAmount;
       } else {
@@ -38,26 +49,20 @@ const Home = ({ isMenuOpen }) => {
   };
 
   useEffect(() => {
-    // Set client state to true after the component has mounted
     setIsClient(true);
 
     const handleScrollEvent = () => {
       if (containerRef.current) {
         const { top, bottom } = containerRef.current.getBoundingClientRect();
         const windowHeight = window.innerHeight;
-
-        // Check if "Best Creators" section is in view
         setIsScrollHidden(bottom < 0 || top > windowHeight);
       }
     };
 
-    // Add event listener for scroll events
     window.addEventListener("scroll", handleScrollEvent);
-    // Clean up event listener on unmount
     return () => window.removeEventListener("scroll", handleScrollEvent);
   }, []);
 
-  // Render nothing on the server side or while loading
   if (!isClient) {
     return null;
   }
@@ -75,7 +80,6 @@ const Home = ({ isMenuOpen }) => {
             Best Creators
           </h1>
           <div className="relative overflow-hidden w-full">
-            {/* Hide scroll images when menu is open */}
             {!isScrollHidden && !isMenuOpen && (
               <>
                 <div
@@ -132,12 +136,17 @@ const Home = ({ isMenuOpen }) => {
               SearchBar
             </div>
           </div>
-          <div className="mt-3 w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8  dark:text-white text-nft-black-1 ">
-            {nfts.length > 0 ? (
-              nfts.map((nft) => <NFTCard key={nft.tokenId} nft={nft} />)
-            ) : (
-              <p>No NFTs available.</p>
-            )}
+          <div className="mt-3 w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 dark:text-white text-nft-black-1">
+            {/* Render Prebuilt Hot Bids using map */}
+            {prebuiltHotBids.map((nft) => (
+              <NFTCard key={nft.tokenId} nft={nft} />
+            ))}
+            {/* Render Created NFTs */}
+            {createdNFTs.map((nft) => (
+              <NFTCard key={nft.tokenId} nft={nft} />
+            ))}
+            {/* Fallback message */}
+            {nfts.length === 0 && createdNFTs.length === 0 && <p>No NFTs available.</p>}
           </div>
         </div>
       </div>
